@@ -1,0 +1,64 @@
+{
+  "name": "@operatornest/mcp-tools",
+  "version": "1.0.0",
+  "description": "Five deterministic MCP tools for costs, time zones and schedules.",
+  "type": "module",
+  "license": "MIT",
+  "author": "OperatorNest",
+  "mcpName": "com.operatornest/tools",
+  "homepage": "https://operatornest.com/tools/mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OperatorNest/mcp-tools"
+  },
+  "bugs": {
+    "url": "https://github.com/OperatorNest/mcp-tools/issues"
+  },
+  "bin": {
+    "operatornest-mcp-tools": "dist/stdio.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/types/mcp-tools.d.ts",
+      "import": "./dist/tools.js"
+    },
+    "./worker": {
+      "types": "./dist/types/worker.d.ts",
+      "import": "./dist/worker.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src/data",
+    "server.json",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "packageManager": "pnpm@12.6.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "build": "pnpm check && node scripts/build.mjs",
+    "test": "pnpm build && node --test test/*.test.mjs",
+    "test:local": "pnpm test",
+    "dev:worker": "wrangler dev --local",
+    "prepack": "pnpm build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.2.0",
+    "@cfworker/json-schema": "4.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.0",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "esbuild": "^0.25.0",
+    "typescript": "5.9.3",
+    "wrangler": "4.145.0"
+  }
+}

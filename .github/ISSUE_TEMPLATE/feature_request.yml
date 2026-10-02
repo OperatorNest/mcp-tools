@@ -1,0 +1,10 @@
+name: Change request
+description: Propose a change to a calculation or client setup.
+body:
+  - type: textarea
+    id: change
+    attributes:
+      label: Requested behavior
+      description: Describe the task, current limit and proposed result.
+    validations:
+      required: true

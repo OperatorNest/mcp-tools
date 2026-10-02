@@ -1,0 +1,24 @@
+name: Bug report
+description: Report a calculation or transport failure.
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Version and runtime
+      placeholder: 1.0.0, Node.js version or HTTP client
+    validations:
+      required: true
+  - type: dropdown
+    id: transport
+    attributes:
+      label: Transport
+      options: [Hosted HTTP, Self-hosted HTTP, Stdio]
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Input, expected result and observed result
+      description: Include a minimal reproduction. Remove personal information and credentials.
+    validations:
+      required: true
