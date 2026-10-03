@@ -2,7 +2,7 @@
 
 Hosted MCP endpoint: **https://operatornest.com/mcp** (Streamable HTTP, no API key).
 
-Five deterministic calculations, with runnable TypeScript source and the same tool definitions over HTTP and stdio. Each result includes normalized inputs, units, method, assumptions, dated sources and a link to open the result on [OperatorNest](https://operatornest.com/tools/mcp). Calculations use bundled data and make no network calls. They do not create events, install schedules or execute tasks.
+Five deterministic cost, time-zone and scheduling calculations use bundled data and the same tool definitions over HTTP and stdio, returning normalized inputs, units, method, assumptions, dated sources and a link to open each result on [OperatorNest](https://operatornest.com/tools/mcp). No network calls. The TypeScript source is included; calculations do not create events, install schedules or execute tasks.
 
 | Tool | Result |
 | --- | --- |
@@ -12,9 +12,17 @@ Five deterministic calculations, with runnable TypeScript source and the same to
 | `ai_subscription_stack_cost` | Monthly and annual totals with overlapping capabilities |
 | `cron_next_runs` | 1–10 matches after a UTC instant, within 366 days |
 
+The `justfile` installs frozen dependencies, checks prerequisites and runs the build and tests:
+
+```sh
+just setup
+just doctor
+just check
+```
+
 ## Self-hosting
 
-Requires Node.js 22.19 or newer and pnpm 12.6.0.
+For checkout development, run `just setup` to install Node 26 and pnpm 12. The published package supports Node.js 22.19 or newer.
 
 ```sh
 git clone https://github.com/OperatorNest/mcp-tools.git
@@ -25,7 +33,7 @@ pnpm build
 node dist/stdio.js
 ```
 
-The last command serves newline-delimited MCP messages on stdin/stdout. Logs go to stderr. For a client with stdio support, use `node` with the absolute path to `dist/stdio.js` as its argument.
+For a client with stdio support, use `node` with the absolute path to `dist/stdio.js` as its argument to serve newline-delimited MCP messages on stdin/stdout, keeping protocol traffic separate from the logs written to stderr.
 
 The package is prepared as `@operatornest/mcp-tools` version 1.1.0. To run a local package through `npx` before registry publication:
 
@@ -46,7 +54,7 @@ pnpm dev:worker --port 8787
 
 Connect a client to `http://localhost:8787/mcp`. For remote hosting, follow the [Worker setup documentation](https://developers.cloudflare.com/workers/get-started/guide/) in your own account.
 
-The HTTP handler caps request bodies at 32 KiB, rejects JSON-RPC batches, returns generic errors and supports CORS for HTTPS origins. Local endpoints accept local origins. It uses stateless JSON responses, without sessions or subscription streams.
+The HTTP handler uses stateless JSON responses without sessions or subscription streams, caps request bodies at 32 KiB, rejects JSON-RPC batches and returns generic errors, with CORS for HTTPS origins and local-origin access to local endpoints.
 
 Rate limiting is optional. To enable it, configure an `MCP_LIMITER` [rate-limit binding](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/). When present, it uses a SHA-256 hash of `CF-Connecting-IP`; rejection returns HTTP 429 with `Retry-After: 60`. Missing client IP or a binding error returns HTTP 503. No binding means no rate limiting.
 

@@ -2,7 +2,7 @@
 
 For a bug, include the version, transport, input, expected result and observed result. Remove credentials and personal information. For a change, explain the user-visible behavior and provide a small reproduction.
 
-Use Node.js 22.19 or newer and pnpm 12.6.0. Run:
+Use Node 26 and pnpm 12 for checkout development (`just setup`). The published package supports Node.js 22.19 or newer. Run:
 
 ```sh
 pnpm install --frozen-lockfile
