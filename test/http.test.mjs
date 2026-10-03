@@ -19,7 +19,7 @@ test('HTTP initialize, list and all valid/invalid calls without a limiter', asyn
   const init = await send(rpc('initialize', initialize));
   assert.equal(init.response.status, 200);
   assert.equal(init.data.result.serverInfo.name, 'OperatorNest tools');
-  assert.equal(init.data.result.serverInfo.version, '1.0.0');
+  assert.equal(init.data.result.serverInfo.version, '1.1.0');
   assert.ok(init.data.result.capabilities.tools);
   assert.equal(init.response.headers.get('MCP-Session-Id'), null);
   assert.equal((await send({ jsonrpc: '2.0', method: 'notifications/initialized' })).response.status, 202);

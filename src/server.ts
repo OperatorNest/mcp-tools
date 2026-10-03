@@ -4,7 +4,7 @@ import { MCP_TOOLS, callMcpTool } from './mcp-tools.js';
 
 const validator=new CfWorkerJsonSchemaValidator();
 export function createServer() {
-  const server=new McpServer({name:'OperatorNest tools',version:'1.0.0'},{jsonSchemaValidator:validator});
+  const server=new McpServer({name:'OperatorNest tools',version:'1.1.0'},{jsonSchemaValidator:validator});
   for (const tool of MCP_TOOLS) server.registerTool(tool.name,{
     title:tool.title,description:tool.description,annotations:tool.annotations,
     inputSchema:fromJsonSchema(tool.inputSchema,validator),outputSchema:fromJsonSchema(tool.outputSchema,validator),

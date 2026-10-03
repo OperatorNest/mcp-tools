@@ -3,7 +3,8 @@
     "type": "object",
     "properties": {
       "tool": {
-        "const": "ai-api-cost-calculator"
+        "const": "ai-api-cost-calculator",
+        "description": "Calculator identifier for this result."
       },
       "input": {
         "type": "object",
@@ -12,38 +13,60 @@
           "inputTokens": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 100000000
+            "maximum": 100000000,
+            "description": "Total input tokens per request, including cached input tokens.",
+            "examples": [
+              10000
+            ]
           },
           "cachedInputTokens": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 100000000
+            "maximum": 100000000,
+            "description": "Cached portion of inputTokens per request; must not exceed inputTokens. Use 0 without caching.",
+            "examples": [
+              5000
+            ]
           },
           "outputTokens": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 100000000
+            "maximum": 100000000,
+            "description": "Generated output tokens per request.",
+            "examples": [
+              2000
+            ]
           },
           "requestsPerDay": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 10000000
+            "maximum": 10000000,
+            "description": "Requests used to scale the daily estimate, independent of requestsPerMonth.",
+            "examples": [
+              100
+            ]
           },
           "requestsPerMonth": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 100000000
+            "maximum": 100000000,
+            "description": "Requests used to scale the monthly estimate; not inferred from the daily count.",
+            "examples": [
+              3000
+            ]
           },
           "modelIds": {
             "type": "array",
             "minItems": 1,
             "maxItems": 20,
             "uniqueItems": true,
+            "description": "Unique providerId/id values from the MCP pricing catalog. Unknown or unavailable IDs fail validation.",
             "items": {
               "type": "string",
               "minLength": 1,
               "maxLength": 200,
-              "pattern": "\\S"
+              "pattern": "\\S",
+              "description": "Model ID accepted by the MCP pricing catalog."
             }
           },
           "batchModelIds": {
@@ -55,9 +78,13 @@
               "type": "string",
               "minLength": 1,
               "maxLength": 200,
-              "pattern": "\\S"
+              "pattern": "\\S",
+              "description": "Selected model ID with a published batch discount."
             },
-            "description": "Optional model IDs using a published batch discount."
+            "description": "Optional subset of modelIds to price with published batch discounts. Omission or [] uses standard rates; IDs without a published discount are rejected.",
+            "examples": [
+              []
+            ]
           }
         },
         "required": [
@@ -67,28 +94,35 @@
           "requestsPerDay",
           "requestsPerMonth",
           "modelIds"
-        ]
+        ],
+        "description": "Normalized inputs used for this calculation."
       },
       "units": {
         "type": "object",
         "additionalProperties": {
-          "type": "string"
-        }
+          "type": "string",
+          "description": "Unit or source detail for the named field."
+        },
+        "description": "Units for the numeric and time fields in this result."
       },
       "method": {
-        "type": "string"
+        "type": "string",
+        "description": "Calculation or ranking method applied to the inputs."
       },
       "assumptions": {
         "type": "array",
         "items": {
           "type": "string"
-        }
+        },
+        "description": "Limits and assumptions to retain when presenting the result."
       },
       "provenance": {
         "type": "object",
         "additionalProperties": {
-          "type": "string"
-        }
+          "type": "string",
+          "description": "Unit or source detail for the named field."
+        },
+        "description": "Dated data sources or runtime time-zone information used for this result."
       },
       "estimates": {
         "type": "array",
@@ -96,34 +130,41 @@
           "type": "object",
           "properties": {
             "modelId": {
-              "type": "string"
+              "type": "string",
+              "description": "Selected providerId/id from the pricing catalog."
             },
             "name": {
-              "type": "string"
+              "type": "string",
+              "description": "Display name of the selected model or plan."
             },
             "perRequest": {
               "type": [
                 "number",
                 "null"
-              ]
+              ],
+              "description": "Estimated USD per request; null when any required rate is unlisted."
             },
             "perDay": {
               "type": [
                 "number",
                 "null"
-              ]
+              ],
+              "description": "Estimated USD per day at requestsPerDay; null when rates are unlisted."
             },
             "perMonth": {
               "type": [
                 "number",
                 "null"
-              ]
+              ],
+              "description": "Estimated USD per month at requestsPerMonth; null when rates are unlisted."
             },
             "longContext": {
-              "type": "boolean"
+              "type": "boolean",
+              "description": "Whether published long-context rate multipliers apply."
             },
             "batch": {
-              "type": "boolean"
+              "type": "boolean",
+              "description": "Whether a requested published batch discount was applied."
             },
             "ratesPerMillion": {
               "type": "object",
@@ -132,19 +173,22 @@
                   "type": [
                     "number",
                     "null"
-                  ]
+                  ],
+                  "description": "Uncached-input USD rate per million tokens; null means unlisted."
                 },
                 "cachedInput": {
                   "type": [
                     "number",
                     "null"
-                  ]
+                  ],
+                  "description": "Cached-input USD rate per million tokens; falls back to the input rate when absent."
                 },
                 "output": {
                   "type": [
                     "number",
                     "null"
-                  ]
+                  ],
+                  "description": "Output USD rate per million tokens; null means unlisted."
                 }
               },
               "required": [
@@ -152,14 +196,17 @@
                 "cachedInput",
                 "output"
               ],
-              "additionalProperties": false
+              "additionalProperties": false,
+              "description": "USD rates per million tokens after long-context multipliers, before batch discounts; null means unlisted."
             },
             "sourceUrl": {
               "type": "string",
-              "format": "uri"
+              "format": "uri",
+              "description": "Official rate or scheduler syntax reference URL."
             },
             "note": {
-              "type": "string"
+              "type": "string",
+              "description": "Catalog note about pricing limitations."
             }
           },
           "required": [
@@ -175,7 +222,8 @@
             "note"
           ],
           "additionalProperties": false
-        }
+        },
+        "description": "Cost estimates in selected-model order."
       }
     },
     "required": [
@@ -187,13 +235,15 @@
       "provenance",
       "estimates"
     ],
-    "additionalProperties": false
+    "additionalProperties": false,
+    "description": "API token cost estimates with normalized inputs, USD units, rate assumptions and catalog snapshot provenance."
   },
   "meeting-time-zone-planner": {
     "type": "object",
     "properties": {
       "tool": {
-        "const": "meeting-time-zone-planner"
+        "const": "meeting-time-zone-planner",
+        "description": "Calculator identifier for this result."
       },
       "input": {
         "type": "object",
@@ -202,13 +252,19 @@
           "date": {
             "type": "string",
             "format": "date",
+            "minLength": 10,
+            "maxLength": 10,
             "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
-            "description": "Real date from 2000-01-01 to 2100-12-31."
+            "description": "Meeting date in the first person’s local time zone, from 2000-01-01 to 2100-12-31.",
+            "examples": [
+              "2026-10-05"
+            ]
           },
           "people": {
             "type": "array",
             "minItems": 2,
             "maxItems": 8,
+            "description": "Participants in display order. The first person determines the local date; all must fit a full half-hour inside 09:00–17:00.",
             "items": {
               "type": "object",
               "additionalProperties": false,
@@ -217,14 +273,22 @@
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 80,
-                  "pattern": "\\S"
+                  "pattern": "\\S",
+                  "description": "Participant label used in the returned local-time display.",
+                  "examples": [
+                    "Sam"
+                  ]
                 },
                 "zone": {
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 100,
                   "pattern": "\\S",
-                  "description": "An IANA time zone supported by Intl.DateTimeFormat, such as America/New_York."
+                  "description": "IANA time zone supported by Intl.DateTimeFormat.",
+                  "examples": [
+                    "America/New_York",
+                    "Asia/Kolkata"
+                  ]
                 }
               },
               "required": [
@@ -237,28 +301,35 @@
         "required": [
           "date",
           "people"
-        ]
+        ],
+        "description": "Normalized inputs used for this calculation."
       },
       "units": {
         "type": "object",
         "additionalProperties": {
-          "type": "string"
-        }
+          "type": "string",
+          "description": "Unit or source detail for the named field."
+        },
+        "description": "Units for the numeric and time fields in this result."
       },
       "method": {
-        "type": "string"
+        "type": "string",
+        "description": "Calculation or ranking method applied to the inputs."
       },
       "assumptions": {
         "type": "array",
         "items": {
           "type": "string"
-        }
+        },
+        "description": "Limits and assumptions to retain when presenting the result."
       },
       "provenance": {
         "type": "object",
         "additionalProperties": {
-          "type": "string"
-        }
+          "type": "string",
+          "description": "Unit or source detail for the named field."
+        },
+        "description": "Dated data sources or runtime time-zone information used for this result."
       },
       "rows": {
         "type": "array",
@@ -271,22 +342,26 @@
             },
             "startUtc": {
               "type": "string",
-              "format": "date-time"
+              "format": "date-time",
+              "description": "Start instant in ISO 8601 UTC."
             },
             "inside": {
               "type": "array",
               "items": {
                 "type": "boolean"
-              }
+              },
+              "description": "Whether each participant’s full half-hour fits their 09:00–17:00 workday, in input order."
             },
             "labels": {
               "type": "array",
               "items": {
                 "type": "string"
-              }
+              },
+              "description": "Local start labels for participants in input order."
             },
             "score": {
-              "type": "number"
+              "type": "number",
+              "description": "Sum of absolute hours from 13:00 at each participant’s slot midpoint; lower ranks first."
             }
           },
           "required": [
@@ -297,11 +372,13 @@
             "score"
           ],
           "additionalProperties": false
-        }
+        },
+        "description": "All candidate half-hour starts on the first participant’s local date, in chronological order."
       },
       "overlapCount": {
         "type": "integer",
-        "minimum": 0
+        "minimum": 0,
+        "description": "Number of candidate slots inside every participant’s workday."
       },
       "bestSlots": {
         "type": "array",
@@ -315,22 +392,26 @@
             },
             "startUtc": {
               "type": "string",
-              "format": "date-time"
+              "format": "date-time",
+              "description": "Start instant in ISO 8601 UTC."
             },
             "inside": {
               "type": "array",
               "items": {
                 "type": "boolean"
-              }
+              },
+              "description": "Whether each participant’s full half-hour fits their 09:00–17:00 workday, in input order."
             },
             "labels": {
               "type": "array",
               "items": {
                 "type": "string"
-              }
+              },
+              "description": "Local start labels for participants in input order."
             },
             "score": {
-              "type": "number"
+              "type": "number",
+              "description": "Sum of absolute hours from 13:00 at each participant’s slot midpoint; lower ranks first."
             }
           },
           "required": [
@@ -341,7 +422,8 @@
             "score"
           ],
           "additionalProperties": false
-        }
+        },
+        "description": "Up to three shared slots ranked by score, then earliest UTC start; [] means no overlap."
       }
     },
     "required": [
@@ -355,13 +437,15 @@
       "overlapCount",
       "bestSlots"
     ],
-    "additionalProperties": false
+    "additionalProperties": false,
+    "description": "Meeting candidates and ranked shared slots with normalized participants, local labels and DST assumptions."
   },
   "recurring-task-planner": {
     "type": "object",
     "properties": {
       "tool": {
-        "const": "recurring-task-planner"
+        "const": "recurring-task-planner",
+        "description": "Calculator identifier for this result."
       },
       "input": {
         "type": "object",
@@ -370,13 +454,19 @@
           "startDate": {
             "type": "string",
             "format": "date",
+            "minLength": 10,
+            "maxLength": 10,
             "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
-            "description": "Real date from 2000-01-01 to 2100-12-31."
+            "description": "Earliest date for the first occurrence of each task, from 2000-01-01 to 2100-12-31.",
+            "examples": [
+              "2026-10-05"
+            ]
           },
           "tasks": {
             "type": "array",
             "minItems": 0,
             "maxItems": 20,
+            "description": "Tasks to include in the estimate and calendar. [] returns zero hours and a calendar with no events.",
             "items": {
               "type": "object",
               "additionalProperties": false,
@@ -385,7 +475,11 @@
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 80,
-                  "pattern": "\\S"
+                  "pattern": "\\S",
+                  "description": "Task label used as the calendar event summary.",
+                  "examples": [
+                    "Investor update"
+                  ]
                 },
                 "frequency": {
                   "type": "string",
@@ -393,7 +487,8 @@
                     "weekly",
                     "biweekly",
                     "monthly"
-                  ]
+                  ],
+                  "description": "Repeat every week, every two weeks from the first matching weekday, or every month."
                 },
                 "day": {
                   "type": "string",
@@ -405,21 +500,39 @@
                     "FR",
                     "SA",
                     "SU"
+                  ],
+                  "description": "Weekday for weekly/biweekly tasks. Required but ignored for monthly tasks.",
+                  "examples": [
+                    "MO"
                   ]
                 },
                 "monthday": {
                   "type": "integer",
                   "minimum": 1,
-                  "maximum": 28
+                  "maximum": 28,
+                  "description": "Day of month for monthly tasks, limited to dates present in every month. Required but ignored for weekly/biweekly tasks.",
+                  "examples": [
+                    1
+                  ]
                 },
                 "minutes": {
                   "type": "integer",
                   "minimum": 1,
-                  "maximum": 1440
+                  "maximum": 1440,
+                  "description": "Estimated minutes per run; used for event duration and monthly hours.",
+                  "examples": [
+                    35
+                  ]
                 },
                 "time": {
                   "type": "string",
-                  "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+                  "minLength": 5,
+                  "maxLength": 5,
+                  "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+                  "description": "24-hour HH:mm start time, floating in the importing calendar’s local time zone.",
+                  "examples": [
+                    "09:00"
+                  ]
                 },
                 "owner": {
                   "type": "string",
@@ -427,7 +540,8 @@
                     "delegate",
                     "keep",
                     "decide"
-                  ]
+                  ],
+                  "description": "Planning label: delegate to an operator, keep for yourself, or decide later. Included in the calendar note; does not assign or execute work."
                 }
               },
               "required": [
@@ -445,31 +559,39 @@
         "required": [
           "startDate",
           "tasks"
-        ]
+        ],
+        "description": "Normalized inputs used for this calculation."
       },
       "units": {
         "type": "object",
         "additionalProperties": {
-          "type": "string"
-        }
+          "type": "string",
+          "description": "Unit or source detail for the named field."
+        },
+        "description": "Units for the numeric and time fields in this result."
       },
       "method": {
-        "type": "string"
+        "type": "string",
+        "description": "Calculation or ranking method applied to the inputs."
       },
       "assumptions": {
         "type": "array",
         "items": {
           "type": "string"
-        }
+        },
+        "description": "Limits and assumptions to retain when presenting the result."
       },
       "provenance": {
         "type": "object",
         "additionalProperties": {
-          "type": "string"
-        }
+          "type": "string",
+          "description": "Unit or source detail for the named field."
+        },
+        "description": "Dated data sources or runtime time-zone information used for this result."
       },
       "monthlyHours": {
-        "type": "number"
+        "type": "number",
+        "description": "Estimated monthly hours using 52/12 weekly, 26/12 biweekly and one monthly run."
       },
       "schedules": {
         "type": "array",
@@ -480,7 +602,11 @@
               "type": "string",
               "minLength": 1,
               "maxLength": 80,
-              "pattern": "\\S"
+              "pattern": "\\S",
+              "description": "Task label used as the calendar event summary.",
+              "examples": [
+                "Investor update"
+              ]
             },
             "frequency": {
               "type": "string",
@@ -488,7 +614,8 @@
                 "weekly",
                 "biweekly",
                 "monthly"
-              ]
+              ],
+              "description": "Repeat every week, every two weeks from the first matching weekday, or every month."
             },
             "day": {
               "type": "string",
@@ -500,21 +627,39 @@
                 "FR",
                 "SA",
                 "SU"
+              ],
+              "description": "Weekday for weekly/biweekly tasks. Required but ignored for monthly tasks.",
+              "examples": [
+                "MO"
               ]
             },
             "monthday": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 28
+              "maximum": 28,
+              "description": "Day of month for monthly tasks, limited to dates present in every month. Required but ignored for weekly/biweekly tasks.",
+              "examples": [
+                1
+              ]
             },
             "minutes": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 1440
+              "maximum": 1440,
+              "description": "Estimated minutes per run; used for event duration and monthly hours.",
+              "examples": [
+                35
+              ]
             },
             "time": {
               "type": "string",
-              "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+              "minLength": 5,
+              "maxLength": 5,
+              "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+              "description": "24-hour HH:mm start time, floating in the importing calendar’s local time zone.",
+              "examples": [
+                "09:00"
+              ]
             },
             "owner": {
               "type": "string",
@@ -522,14 +667,17 @@
                 "delegate",
                 "keep",
                 "decide"
-              ]
+              ],
+              "description": "Planning label: delegate to an operator, keep for yourself, or decide later. Included in the calendar note; does not assign or execute work."
             },
             "firstDate": {
               "type": "string",
-              "format": "date"
+              "format": "date",
+              "description": "First occurrence on or after startDate."
             },
             "recurrenceRule": {
-              "type": "string"
+              "type": "string",
+              "description": "RFC 5545 RRULE matching the task frequency and day."
             }
           },
           "required": [
@@ -544,7 +692,8 @@
             "recurrenceRule"
           ],
           "additionalProperties": false
-        }
+        },
+        "description": "Normalized tasks with their first occurrence and recurrence rule, in input order."
       },
       "ics": {
         "type": "string",
@@ -562,13 +711,15 @@
       "schedules",
       "ics"
     ],
-    "additionalProperties": false
+    "additionalProperties": false,
+    "description": "Monthly effort estimate, normalized recurrence rules and an importable floating-time calendar."
   },
   "ai-subscription-cost-calculator": {
     "type": "object",
     "properties": {
       "tool": {
-        "const": "ai-subscription-cost-calculator"
+        "const": "ai-subscription-cost-calculator",
+        "description": "Calculator identifier for this result."
       },
       "input": {
         "type": "object",
@@ -579,6 +730,14 @@
             "minItems": 0,
             "maxItems": 18,
             "uniqueItems": true,
+            "description": "Unique subscription IDs from the enum. An empty list returns zero totals and no selected plans.",
+            "examples": [
+              [
+                "chatgpt-plus",
+                "claude-pro"
+              ],
+              []
+            ],
             "items": {
               "type": "string",
               "enum": [
@@ -600,34 +759,40 @@
                 "manus-pro",
                 "genspark-plus",
                 "cursor-pro"
-              ]
+              ],
+              "description": "ID of a plan in the bundled subscription catalog."
             }
           }
         },
         "required": [
           "planIds"
-        ]
+        ],
+        "description": "Normalized inputs used for this calculation."
       },
       "method": {
-        "type": "string"
+        "type": "string",
+        "description": "Calculation or ranking method applied to the inputs."
       },
       "assumptions": {
         "type": "array",
         "items": {
           "type": "string"
-        }
+        },
+        "description": "Limits and assumptions to retain when presenting the result."
       },
       "units": {
         "type": "object",
         "properties": {
           "totals": {
-            "const": "USD"
+            "const": "USD",
+            "description": "Currency for subscription totals."
           }
         },
         "required": [
           "totals"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "Units for the numeric and time fields in this result."
       },
       "plans": {
         "type": "array",
@@ -635,49 +800,62 @@
           "type": "object",
           "properties": {
             "id": {
-              "type": "string"
+              "type": "string",
+              "description": "Catalog identifier for a plan or capability."
             },
             "provider": {
-              "type": "string"
+              "type": "string",
+              "description": "Public subscription provider name."
             },
             "name": {
-              "type": "string"
+              "type": "string",
+              "description": "Display name of the selected model or plan."
             },
             "monthly": {
-              "type": "number"
+              "type": "number",
+              "description": "Published USD monthly charge."
             },
             "annual": {
               "type": [
                 "number",
                 "null"
-              ]
+              ],
+              "description": "Published USD annual charge; null if only monthly billing is listed."
             },
             "annualNote": {
-              "type": "string"
+              "type": "string",
+              "description": "Qualification about annual billing."
             },
             "capabilities": {
               "type": "object",
               "additionalProperties": {
-                "type": "boolean"
-              }
+                "type": "boolean",
+                "description": "Whether the plan offers this capability."
+              },
+              "description": "Capability IDs mapped to whether the selected plan includes them."
             },
             "modelFamilies": {
               "type": "array",
               "items": {
                 "type": "string"
-              }
+              },
+              "description": "Model family labels listed for the plan."
             },
             "source": {
-              "type": "string"
+              "type": "string",
+              "description": "Official plan pricing URL."
             },
             "modelSource": {
-              "type": "string"
+              "type": "string",
+              "description": "Official source for plan model access."
             },
             "checked": {
-              "type": "string"
+              "type": "string",
+              "description": "Date the referenced catalog or scheduler source was checked."
             },
             "sourceNote": {
-              "type": "string"
+              "type": "string",
+              "description": "Qualification about the source or plan availability."
             }
           },
           "required": [
@@ -693,13 +871,16 @@
             "checked"
           ],
           "additionalProperties": false
-        }
+        },
+        "description": "Selected plans with published USD charges and dated sources, in input order."
       },
       "monthlyTotal": {
-        "type": "number"
+        "type": "number",
+        "description": "Sum of selected monthly USD charges; zero for an empty stack."
       },
       "annualTotal": {
-        "type": "number"
+        "type": "number",
+        "description": "Sum of published annual charges or twelve monthly charges per plan; excludes taxes, regional changes and promotions."
       },
       "overlap": {
         "type": "array",
@@ -707,16 +888,19 @@
           "type": "object",
           "properties": {
             "id": {
-              "type": "string"
+              "type": "string",
+              "description": "Catalog identifier for a plan or capability."
             },
             "label": {
-              "type": "string"
+              "type": "string",
+              "description": "Human-readable capability label."
             },
             "planIds": {
               "type": "array",
               "items": {
                 "type": "string"
-              }
+              },
+              "description": "Selected plans offering this capability; more than one ID indicates overlap."
             }
           },
           "required": [
@@ -725,13 +909,15 @@
             "planIds"
           ],
           "additionalProperties": false
-        }
+        },
+        "description": "Capability groups and selected plan IDs; more than one plan ID indicates overlap."
       },
       "provenance": {
         "type": "object",
         "properties": {
           "checked": {
-            "type": "string"
+            "type": "string",
+            "description": "Date the referenced catalog or scheduler source was checked."
           },
           "sources": {
             "type": "array",
@@ -739,13 +925,16 @@
               "type": "object",
               "properties": {
                 "planId": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Selected plan ID corresponding to this source."
                 },
                 "url": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Official plan pricing URL."
                 },
                 "checked": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Date the referenced catalog or scheduler source was checked."
                 }
               },
               "required": [
@@ -754,14 +943,16 @@
                 "checked"
               ],
               "additionalProperties": false
-            }
+            },
+            "description": "Official pricing sources for the selected plans."
           }
         },
         "required": [
           "checked",
           "sources"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "Dated data sources or runtime time-zone information used for this result."
       }
     },
     "required": [
@@ -776,13 +967,15 @@
       "overlap",
       "provenance"
     ],
-    "additionalProperties": false
+    "additionalProperties": false,
+    "description": "Subscription totals, capability overlap and dated plan sources with normalized selection."
   },
   "cron-expression-generator": {
     "type": "object",
     "properties": {
       "tool": {
-        "const": "cron-expression-generator"
+        "const": "cron-expression-generator",
+        "description": "Calculator identifier for this result."
       },
       "input": {
         "type": "object",
@@ -792,7 +985,11 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 200,
-            "pattern": "\\S"
+            "pattern": "\\S",
+            "description": "Cron fields in the selected dialect: five for github/cloudflare, six or seven for quartz, six for aws (optional cron(...) wrapper). Supports *, lists, ranges, steps and weekday names; rejects L, W, # and named months. Quartz/aws require ? in exactly one day field.",
+            "examples": [
+              "0 9 * * 1-5"
+            ]
           },
           "dialect": {
             "type": "string",
@@ -801,24 +998,42 @@
               "cloudflare",
               "quartz",
               "aws"
+            ],
+            "description": "Scheduler syntax and weekday numbering. github uses 0 or 7 for Sunday and 1–6 for Monday–Saturday; the others use 1–7 for Sunday–Saturday.",
+            "examples": [
+              "github"
             ]
           },
           "zone": {
             "type": "string",
             "minLength": 1,
             "maxLength": 100,
-            "pattern": "\\S"
+            "pattern": "\\S",
+            "description": "IANA time zone for matching local cron fields. cloudflare requires UTC. Daylight saving transitions follow the runtime time-zone database.",
+            "examples": [
+              "UTC",
+              "America/New_York"
+            ]
           },
           "after": {
             "type": "string",
             "format": "date-time",
-            "maxLength": 30,
-            "description": "UTC ISO instant from 2000 through 2100; matches are strictly after this instant."
+            "minLength": 20,
+            "maxLength": 24,
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$",
+            "description": "UTC ISO instant from 2000 through 2100; matches are strictly after this instant. Only Z offsets are accepted.",
+            "examples": [
+              "2026-10-02T00:00:00Z"
+            ]
           },
           "count": {
             "type": "integer",
             "minimum": 1,
-            "maximum": 10
+            "maximum": 10,
+            "description": "Maximum matches to return. The list may be shorter or empty if no further matches occur within the 366-day search.",
+            "examples": [
+              3
+            ]
           }
         },
         "required": [
@@ -827,16 +1042,19 @@
           "zone",
           "after",
           "count"
-        ]
+        ],
+        "description": "Normalized inputs used for this calculation."
       },
       "method": {
-        "type": "string"
+        "type": "string",
+        "description": "Calculation or ranking method applied to the inputs."
       },
       "assumptions": {
         "type": "array",
         "items": {
           "type": "string"
-        }
+        },
+        "description": "Limits and assumptions to retain when presenting the result."
       },
       "runs": {
         "type": "array",
@@ -846,10 +1064,12 @@
           "properties": {
             "startUtc": {
               "type": "string",
-              "format": "date-time"
+              "format": "date-time",
+              "description": "Start instant in ISO 8601 UTC."
             },
             "label": {
-              "type": "string"
+              "type": "string",
+              "description": "Start formatted in the requested IANA time zone."
             }
           },
           "required": [
@@ -857,26 +1077,31 @@
             "label"
           ],
           "additionalProperties": false
-        }
+        },
+        "description": "Chronological cron matches strictly after after, up to count; may be shorter or empty within the search window."
       },
       "searchDays": {
-        "const": 366
+        "const": 366,
+        "description": "Maximum search window in days."
       },
       "provenance": {
         "type": "object",
         "properties": {
           "sourceUrl": {
-            "type": "string"
+            "type": "string",
+            "description": "Official rate or scheduler syntax reference URL."
           },
           "checked": {
-            "type": "string"
+            "type": "string",
+            "description": "Date the referenced catalog or scheduler source was checked."
           }
         },
         "required": [
           "sourceUrl",
           "checked"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "Dated data sources or runtime time-zone information used for this result."
       }
     },
     "required": [
@@ -888,6 +1113,7 @@
       "searchDays",
       "provenance"
     ],
-    "additionalProperties": false
+    "additionalProperties": false,
+    "description": "Bounded cron preview with normalized syntax, UTC starts, local labels and scheduler source."
   }
 }
