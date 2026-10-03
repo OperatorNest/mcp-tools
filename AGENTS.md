@@ -10,7 +10,7 @@ Start with `git status --short`; preserve unrelated changes. Read README.md and 
 - `src/data/`: dated data and standalone output schemas.
 - `test/`: calculation and transport acceptance tests.
 
-Use Node.js 22.19 or newer and pnpm 12.6.0. Run `pnpm check`, `pnpm test:local` and `pnpm build`. For transport changes, exercise initialize, tools/list and valid/invalid tools/call on HTTP and stdio. Test the packed executable when changing packaging.
+For checkout development, run `just setup` to install Node 26 and pnpm 12; the published package supports Node.js 22.19 or newer. Run `pnpm check`, `pnpm test:local` and `pnpm build`. For transport changes, exercise initialize, tools/list and valid/invalid tools/call on HTTP and stdio. Test the packed executable when changing packaging.
 
 Preserve bounded inputs, read-only annotations, the HTTP body cap, batch rejection and generic errors. Calculations make no network requests and perform no external actions. Data changes need sources and checked dates; preserve attribution. Update schemas with result shapes. Never commit secrets or private product code. Publishing, pushing, deploying and registry submissions require explicit authorization.
 
