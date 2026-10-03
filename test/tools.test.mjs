@@ -12,7 +12,7 @@ test('exactly five tools with valid schemas and read-only annotations', () => {
   for (const t of MCP_TOOLS) {
     assert.equal(ajv.validateSchema(t.inputSchema), true, JSON.stringify(ajv.errors));
     assert.equal(ajv.validateSchema(t.outputSchema), true, JSON.stringify(ajv.errors));
-    assert.deepEqual(t.annotations, { readOnlyHint: true, openWorldHint: false, destructiveHint: false, idempotentHint: true });
+    assert.deepEqual(t.annotations, { title: t.title, readOnlyHint: true, openWorldHint: false, destructiveHint: false, idempotentHint: true });
   }
 });
 

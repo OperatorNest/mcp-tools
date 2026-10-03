@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
 import { once } from 'node:events';
@@ -11,7 +12,7 @@ addFormats(ajv);
 
 export async function checkTools(send) {
   const listed = await send('tools/list');
-  assert.equal(listed.result.tools.length, 5);
+  assert.deepEqual(listed.result.tools, JSON.parse(readFileSync(new URL('../src/data/mcp-tools-definitions.json', import.meta.url))), 'Every transport matches the shared committed definitions.');
   assert.deepEqual(listed.result.tools.map(t => t.name).sort(), MCP_TOOLS.map(t => t.name).sort());
   for (const tool of MCP_TOOLS) {
     const exposed = listed.result.tools.find(t => t.name === tool.name);

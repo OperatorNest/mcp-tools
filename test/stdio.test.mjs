@@ -7,7 +7,7 @@ test('stdio initializes, lists and calls every tool with generic errors', { time
   const session = stdioSession(t);
   const init = await session.send('initialize', initialize);
   assert.equal(init.result.serverInfo.name, 'OperatorNest tools');
-  assert.equal(init.result.serverInfo.version, '1.0.0');
+  assert.equal(init.result.serverInfo.version, '1.1.0');
   assert.ok(init.result.capabilities.tools);
   session.notify('notifications/initialized');
   await checkTools((method, params) => session.send(method, params));

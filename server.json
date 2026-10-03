@@ -3,7 +3,7 @@
   "name": "com.operatornest/tools",
   "title": "OperatorNest tools",
   "description": "Calculate API and subscription costs, meeting time zones, recurring schedules and cron matches.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "websiteUrl": "https://operatornest.com/tools/mcp",
   "remotes": [
     {

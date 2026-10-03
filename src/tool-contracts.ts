@@ -33,14 +33,36 @@ export function validDate(value: unknown, field = 'date'): string {
 }
 const integer = (minimum: number, maximum: number) => ({ type: 'integer', minimum, maximum });
 const string = (maxLength: number) => ({ type: 'string', minLength: 1, maxLength, pattern:'\\S' });
-const dateSchema = { type: 'string', format: 'date', pattern: '^\\d{4}-\\d{2}-\\d{2}$', description: 'Real date from 2000-01-01 to 2100-12-31.' };
+const dateSchema = { type: 'string', format: 'date', minLength:10, maxLength:10, pattern: '^\\d{4}-\\d{2}-\\d{2}$', description: 'Real calendar date from 2000-01-01 to 2100-12-31.', examples:['2026-10-05'] };
 const objectSchema = <T extends Record<string, unknown>>(properties: T, required = Object.keys(properties)) => ({ type: 'object', additionalProperties: false, properties, required });
 export const inputSchemas = {
-  'ai-subscription-cost-calculator': objectSchema({ planIds: { type:'array',minItems:0,maxItems:AI_PLANS.length,uniqueItems:true,items:{ type:'string',enum:AI_PLANS.map(p => p.id) } } }),
-  'cron-expression-generator': objectSchema({ expression:string(200),dialect:{ type:'string',enum:['github','cloudflare','quartz','aws'] },zone:string(100),after:{ type:'string',format:'date-time',maxLength:30,description:'UTC ISO instant from 2000 through 2100; matches are strictly after this instant.' },count:integer(1,10) }),
-  'ai-api-cost-calculator': objectSchema({ inputTokens: integer(0, 100000000), cachedInputTokens: integer(0, 100000000), outputTokens: integer(0, 100000000), requestsPerDay: integer(0, 10000000), requestsPerMonth: integer(0, 100000000), modelIds: { type: 'array', minItems: 1, maxItems: 20, uniqueItems: true, items: string(200) }, batchModelIds: { type:'array',minItems:0,maxItems:20,uniqueItems:true,items:string(200),description:'Optional model IDs using a published batch discount.' } }, ['inputTokens','cachedInputTokens','outputTokens','requestsPerDay','requestsPerMonth','modelIds']),
-  'meeting-time-zone-planner': objectSchema({ date: dateSchema, people: { type: 'array', minItems: 2, maxItems: 8, items: objectSchema({ name: string(80), zone: { ...string(100), description: 'An IANA time zone supported by Intl.DateTimeFormat, such as America/New_York.' } }) } }),
-  'recurring-task-planner': objectSchema({ startDate: dateSchema, tasks: { type: 'array', minItems: 0, maxItems: 20, items: objectSchema({ title: string(80), frequency: { type: 'string', enum: ['weekly', 'biweekly', 'monthly'] }, day: { type: 'string', enum: ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'] }, monthday: integer(1, 28), minutes: integer(1, 1440), time: { type: 'string', pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$' }, owner: { type: 'string', enum: ['delegate', 'keep', 'decide'] } }) } }),
+  'ai-subscription-cost-calculator': objectSchema({ planIds: { type:'array',minItems:0,maxItems:AI_PLANS.length,uniqueItems:true,description:'Unique subscription IDs from the enum. An empty list returns zero totals and no selected plans.',examples:[['chatgpt-plus','claude-pro'],[]],items:{ type:'string',enum:AI_PLANS.map(p => p.id),description:'ID of a plan in the bundled subscription catalog.' } } }),
+  'cron-expression-generator': objectSchema({
+    expression:{...string(200),description:'Cron fields in the selected dialect: five for github/cloudflare, six or seven for quartz, six for aws (optional cron(...) wrapper). Supports *, lists, ranges, steps and weekday names; rejects L, W, # and named months. Quartz/aws require ? in exactly one day field.',examples:['0 9 * * 1-5']},
+    dialect:{ type:'string',enum:['github','cloudflare','quartz','aws'],description:'Scheduler syntax and weekday numbering. github uses 0 or 7 for Sunday and 1–6 for Monday–Saturday; the others use 1–7 for Sunday–Saturday.',examples:['github'] },
+    zone:{...string(100),description:'IANA time zone for matching local cron fields. cloudflare requires UTC. Daylight saving transitions follow the runtime time-zone database.',examples:['UTC','America/New_York']},
+    after:{ type:'string',format:'date-time',minLength:20,maxLength:24,pattern:'^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$',description:'UTC ISO instant from 2000 through 2100; matches are strictly after this instant. Only Z offsets are accepted.',examples:['2026-10-02T00:00:00Z'] },
+    count:{...integer(1,10),description:'Maximum matches to return. The list may be shorter or empty if no further matches occur within the 366-day search.',examples:[3]},
+  }),
+  'ai-api-cost-calculator': objectSchema({
+    inputTokens:{...integer(0,100000000),description:'Total input tokens per request, including cached input tokens.',examples:[10000]},
+    cachedInputTokens:{...integer(0,100000000),description:'Cached portion of inputTokens per request; must not exceed inputTokens. Use 0 without caching.',examples:[5000]},
+    outputTokens:{...integer(0,100000000),description:'Generated output tokens per request.',examples:[2000]},
+    requestsPerDay:{...integer(0,10000000),description:'Requests used to scale the daily estimate, independent of requestsPerMonth.',examples:[100]},
+    requestsPerMonth:{...integer(0,100000000),description:'Requests used to scale the monthly estimate; not inferred from the daily count.',examples:[3000]},
+    modelIds:{ type:'array',minItems:1,maxItems:20,uniqueItems:true,description:'Unique providerId/id values from the MCP pricing catalog. Unknown or unavailable IDs fail validation.',items:{...string(200),description:'Model ID accepted by the MCP pricing catalog.'} },
+    batchModelIds:{ type:'array',minItems:0,maxItems:20,uniqueItems:true,items:{...string(200),description:'Selected model ID with a published batch discount.'},description:'Optional subset of modelIds to price with published batch discounts. Omission or [] uses standard rates; IDs without a published discount are rejected.',examples:[[]] },
+  }, ['inputTokens','cachedInputTokens','outputTokens','requestsPerDay','requestsPerMonth','modelIds']),
+  'meeting-time-zone-planner': objectSchema({ date:{...dateSchema,description:'Meeting date in the first person’s local time zone, from 2000-01-01 to 2100-12-31.'}, people: { type:'array',minItems:2,maxItems:8,description:'Participants in display order. The first person determines the local date; all must fit a full half-hour inside 09:00–17:00.',items:objectSchema({ name:{...string(80),description:'Participant label used in the returned local-time display.',examples:['Sam']},zone:{...string(100),description:'IANA time zone supported by Intl.DateTimeFormat.',examples:['America/New_York','Asia/Kolkata']} }) } }),
+  'recurring-task-planner': objectSchema({ startDate:{...dateSchema,description:'Earliest date for the first occurrence of each task, from 2000-01-01 to 2100-12-31.'},tasks:{ type:'array',minItems:0,maxItems:20,description:'Tasks to include in the estimate and calendar. [] returns zero hours and a calendar with no events.',items:objectSchema({
+    title:{...string(80),description:'Task label used as the calendar event summary.',examples:['Investor update']},
+    frequency:{ type:'string',enum:['weekly','biweekly','monthly'],description:'Repeat every week, every two weeks from the first matching weekday, or every month.' },
+    day:{ type:'string',enum:['MO','TU','WE','TH','FR','SA','SU'],description:'Weekday for weekly/biweekly tasks. Required but ignored for monthly tasks.',examples:['MO'] },
+    monthday:{...integer(1,28),description:'Day of month for monthly tasks, limited to dates present in every month. Required but ignored for weekly/biweekly tasks.',examples:[1]},
+    minutes:{...integer(1,1440),description:'Estimated minutes per run; used for event duration and monthly hours.',examples:[35]},
+    time:{ type:'string',minLength:5,maxLength:5,pattern:'^([01][0-9]|2[0-3]):[0-5][0-9]$',description:'24-hour HH:mm start time, floating in the importing calendar’s local time zone.',examples:['09:00'] },
+    owner:{ type:'string',enum:['delegate','keep','decide'],description:'Planning label: delegate to an operator, keep for yourself, or decide later. Included in the calendar note; does not assign or execute work.' },
+  }) } }),
 };
 export type CostInput = { inputTokens: number; cachedInputTokens: number; outputTokens: number; requestsPerDay: number; requestsPerMonth: number; modelIds: string[]; batchModelIds: string[] };
 export function calculateCost(raw: unknown, models: PricedModel[], snapshotAt: string) {
@@ -54,7 +76,7 @@ export function calculateCost(raw: unknown, models: PricedModel[], snapshotAt: s
   if (new Set(input.modelIds).size !== input.modelIds.length) fail('modelIds', 'Select each model only once.');
   if (new Set(input.batchModelIds).size !== input.batchModelIds.length || input.batchModelIds.some(id => !input.modelIds.includes(id))) fail('batchModelIds','Batch IDs must be unique selected model IDs.');
   const estimates = input.modelIds.map((id) => {
-    const model = models.find((m) => m.modelId === id); if (!model) fail('modelIds', `Unknown model: ${id}. Read src/data/pricing-snapshot.json for available IDs.`);
+    const model = models.find((m) => m.modelId === id); if (!model) fail('modelIds', `Unknown model: ${id}. Read /api/models?subset=pricing for available IDs.`);
     const longContext = model.longContextThresholdTokens !== undefined && input.inputTokens > model.longContextThresholdTokens;
     const inputRate = model.inputUsdPerMillion === null ? null : model.inputUsdPerMillion * (longContext ? model.longContextInputMultiplier ?? 1 : 1);
     const cachedRate = model.inputUsdPerMillion === null ? null : (model.cachedInputUsdPerMillion ?? model.inputUsdPerMillion) * (longContext ? model.longContextCachedInputMultiplier ?? 1 : 1);

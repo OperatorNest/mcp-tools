@@ -27,14 +27,14 @@ node dist/stdio.js
 
 The last command serves newline-delimited MCP messages on stdin/stdout. Logs go to stderr. For a client with stdio support, use `node` with the absolute path to `dist/stdio.js` as its argument.
 
-The package is prepared as `@operatornest/mcp-tools` version 1.0.0. To run a local package through `npx` before registry publication:
+The package is prepared as `@operatornest/mcp-tools` version 1.1.0. To run a local package through `npx` before registry publication:
 
 ```sh
-pnpm pack --out /tmp/operatornest-mcp-tools-1.0.0.tgz
-npx --yes --package /tmp/operatornest-mcp-tools-1.0.0.tgz operatornest-mcp-tools
+pnpm pack --out /tmp/operatornest-mcp-tools-1.1.0.tgz
+npx --yes --package /tmp/operatornest-mcp-tools-1.1.0.tgz operatornest-mcp-tools
 ```
 
-After npm publication, the equivalent command is `npx --yes @operatornest/mcp-tools@1.0.0`. Publication is a separate maintainer action.
+After npm publication, the equivalent command is `npx --yes @operatornest/mcp-tools@1.1.0`. Publication is a separate maintainer action.
 
 ### HTTP Worker
 
