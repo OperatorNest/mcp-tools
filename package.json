@@ -50,15 +50,15 @@
     "prepack": "pnpm build"
   },
   "dependencies": {
-    "@modelcontextprotocol/server": "2.2.0",
+    "@modelcontextprotocol/server": "2.3.1",
     "@cfworker/json-schema": "4.1.1"
   },
   "devDependencies": {
-    "@types/node": "^26.6.3",
+    "@types/node": "^26.6.4",
     "ajv": "8.20.0",
     "ajv-formats": "3.0.1",
     "esbuild": "^0.28.2",
     "typescript": "7.0.2",
-    "wrangler": "4.145.0"
+    "wrangler": "4.147.0"
   }
 }
